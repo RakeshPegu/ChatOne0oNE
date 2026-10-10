@@ -3,8 +3,8 @@ import { createChat, deleteChat, getAnyPrtclrChat, getChats } from '../controlle
 import { verifyToken } from '../middleWare/verifyToken.js'
 const router = express.Router()
 router.post('/:userId',verifyToken, createChat)
-router.get('/', verifyToken, getChats)
-router.get('/:userId', verifyToken, getAnyPrtclrChat)
+router.get('/:userId', verifyToken, getChats)
+router.get('/get_particular_chat/:userId', verifyToken, getAnyPrtclrChat)
 router.delete('/:chatId', verifyToken, deleteChat)
 
 export default router;

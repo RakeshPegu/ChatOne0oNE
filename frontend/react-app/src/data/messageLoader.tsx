@@ -1,14 +1,31 @@
 import type { LoaderFunctionArgs } from "react-router-dom"
 import apiRequest from "../lib/apiRequest"
+
+interface Chat {
+    existingChat:{
+    _id:string ;
+    username:string ;
+    userIDs: string[];
+    isGroup: boolean;
+    };
+    username:string
+
+}
+
 export const messageLoader = async({params}:LoaderFunctionArgs)=>{
-    if(!params.userId){
-        throw new  Response('User Id is missing', {status:400})
-    }
     const {userId} = params
     try {
-        const chatInfo = await apiRequest.get(`/chats/${userId}`)
-        const res = await apiRequest.get(`/messages/get_all_messages/${chatInfo?.data.existingChat?._id}`)
-        return {chat:chatInfo.data.existingChat,messages:res.data?.messages ?? []}
+        const existingChat = await apiRequest.get(`/chats/get_particular_chat/${userId}`)  
+        if(!existingChat){
+            return
+        }
+        const chat = existingChat.data.receiverData as Chat
+        const res = await apiRequest.get(`/messages/get_all_messages/${chat.existingChat._id}`)
+    
+        const messages = Array.isArray(res.data)   
+        ? res.data
+        : res.data.messages ?? []                      
+        return {chat:chat, messages:messages}
         
     } catch (error) {
         console.log(error)

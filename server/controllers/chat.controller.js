@@ -1,4 +1,4 @@
-import { chatModel } from "../lib/db.js"
+import { chatModel, userModel } from "../lib/db.js"
 import AppError from "../utility/error.js"
 
 export const createChat = async(req, res)=>{
@@ -7,25 +7,39 @@ export const createChat = async(req, res)=>{
     if(!tokenUserId){
         throw new AppError(403, 'Authentication is required')
     }
-    const existingChat = await chatModel.findOne({userIDs:{$in:[tokenUserId, recieverId]}})
-    if(existingChat){
-        throw new AppError(400, 'Chat already exist')
+    if (tokenUserId.toString() === recieverId.toString()) {
+    return res.status(400).json({
+        success: false,
+        message: "You cannot start a chat with yourself",
+    });
     }
-    const newChat = new chatModel({userIDs:[tokenUserId, recieverId]}).save()
+    const existingChat = await chatModel.findOne({userIDs:{$in:[tokenUserId, recieverId]}})
+    let newChat = existingChat
+    
+    if(!existingChat){
+        const newChat = await chatModel.create({userIDs:[tokenUserId, recieverId]})
+        newChat = newChat
+    }
+
     res.status(201).json({success:true, message:"new chat has been created successfully", newChat})
     
 }
 export const getChats = async(req, res)=>{
-    const tokenUserId = req.userId 
-    if(!tokenUserId){
+    try {
+        const tokenUserId = req.userId
+        if(!tokenUserId){
         throw new AppError(403, 'Authentication is required')
+      }
+
+      const existingChats = await chatModel.find({userIDs:{$in:[tokenUserId]}})
+      res.status(200).json({success:true, existingChats})
+    } catch (error) {
+        res.status(500).json({success:false, message:error || 'Something went wrong'})
+        
     }
-    const exinstingChats = await chatModel.find({userIDs:{$in:[tokenUserId]}})
-    if(exinstingChats.length ===0 ){
-        throw new AppError(404, 'Chats not found')
-    }
-    res.status(200).json({success:true, exinstingChats})
 }
+
+
 export const getAnyPrtclrChat = async(req, res)=>{
     const userId = req.params.userId
     const tokenUserId = req.userId
@@ -35,11 +49,27 @@ export const getAnyPrtclrChat = async(req, res)=>{
     if(!userId){
         throw new AppError(400, 'Chat id is required')
     }
-    const existingChat = await chatModel.findOne({userIDs:{$in:[tokenUserId, userId]}})
+    let existingChat = await chatModel.findOne({userIDs:{$in:[tokenUserId, userId]}})
     if(!existingChat){
         throw new AppError(404, 'Not found')
     }
-    res.status(200).json({success:true, existingChat})
+    const user = await userModel.findById(userId).lean();
+
+    if (!user) {
+    return res.status(404).json({
+        success: false,
+        message: "User not found",
+    });
+    }
+
+    const { username, ...receiverInfo } = user
+        return res.status(200).json({
+        success: true,
+        receiverData: {
+            existingChat,
+            username,
+        },
+        });
 }
 export const deleteChat = async(req, res)=>{
     const tokenUserId = req.userId

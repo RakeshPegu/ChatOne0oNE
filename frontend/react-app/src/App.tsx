@@ -7,9 +7,9 @@ import UserProfile from './routes/UserProfile'
 import MessagePage from './routes/MessagePage'
 import { IsAuthenticated, Layout } from './components/Layout'
 import UserList from './routes/UserList'
-import { getUsersInfoLoader, userLoader } from './data/userLoader'
 import { messageLoader } from './data/messageLoader'
 import { ChatLoader } from './data/chatLoader'
+import { userLoader } from './data/userLoader'
 function App(){
   const router = createBrowserRouter([
     {
@@ -37,12 +37,11 @@ function App(){
         },
               {
         path:"users",
-        loader:getUsersInfoLoader,
         element:<UserList/>
       },
       {
         path:'profile/:userId',
-        loader: userLoader,
+        loader: userLoader ,
         element:<UserProfile/>
       }, 
       {

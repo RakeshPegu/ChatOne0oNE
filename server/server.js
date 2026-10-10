@@ -4,10 +4,12 @@ import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/user.routes.js'
 import chatRoutes from './routes/chat.routes.js'
 import messageRoutes from './routes/message.routes.js'
+import searchRoute from './routes/search.route.js'
 import mongoose from 'mongoose'
 import cookieParser from 'cookie-parser'
 import {createServer} from 'node:http'
 import {Server} from 'socket.io'
+import dns from 'node:dns'
 import cors from 'cors'
 import cookie from 'cookie'
 const app = express()
@@ -29,6 +31,7 @@ app.get('/api/v1/response', (req, res)=>{
 app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/chats', chatRoutes)
+app.use('/api/v1/search_users',searchRoute)
 app.use('/api/v1/messages', messageRoutes)
 app.set('io', io)
 import jwt from "jsonwebtoken";
@@ -36,7 +39,8 @@ import { createMessage } from './utility/messages.service.js'
 
 io.use((socket, next) => {
   try {
-    
+
+   
     const rawCookie= socket.handshake.headers.cookie || ''
     if(!rawCookie){
         return next(new Error('Cookie not found'))
@@ -47,7 +51,6 @@ io.use((socket, next) => {
     if (!token) return next(new Error("Authentication error"));
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-
     socket.userId = decoded.id;
 
     next();
@@ -80,8 +83,19 @@ io.on("connection", (socket) => {
 
 });
 
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
-mongoose.connect(process.env.DATABASE_URL).catch((err)=>{console.error(err)}).then(()=>console.log('database has been connected successfully'))
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.DATABASE_URL);
+    console.log('Database has been connected successfully');
+    console.log("Database name:", mongoose.connection.name);
+  } catch (err) {
+    console.error('Database connection failed:', err.message);
+  }
+};
+
+connectDB();
 app.use(errorMid)
 
 server.listen(port, ()=>{

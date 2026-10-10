@@ -5,7 +5,6 @@ export const sendMessage = async(req, res)=>{
     const chatId = req.params.chatId
     const tokenUserId =req.userId
     const {text} = req.body
-    console.log(text)
     if(!chatId){
         throw new AppError(400, 'chat id is required')
     }
@@ -41,7 +40,8 @@ export const getMessages = async(req, res)=>{
     if(!existingChat){
         throw new AppError(404, 'Chat not found')
     }
-    const messages = await messageModel.find({chatId:chatId})     
+    const messages = await messageModel.find({chatId:chatId}) 
+    console.log('this are the messages', messages)    
     res.status(200).json({success:true, messages})
 
 }

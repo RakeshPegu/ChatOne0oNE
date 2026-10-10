@@ -1,12 +1,18 @@
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData} from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import MessageCard from "../cards/MessageCard";
 import socket from "../lib/socket";
+import defaultPic from '../../public/profile.png'
+import {Send} from 'lucide-react'
 
 interface Chat {
+  existingChat: {
   _id: string;
+  username:string
   userIDs: string[];
   isGroup: boolean;
+  } ;
+  username: string
 }
 
 interface Message {
@@ -23,29 +29,29 @@ function MessagePage() {
     chat: Chat | null;
     messages: Message[];
   };
-
+  
   const [text, setText] = useState("");
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [chatMessages, setChatMessages] = useState<Message[]>(messages || []);
+  
 
   const handleSendMessage = async (
     e: React.FormEvent<HTMLFormElement>
   ) => {
-    e.preventDefault();
-    if (!text.trim() || !chat?._id) return;
-
+    e.preventDefault()
+    if (!text.trim()|| !chat?.existingChat._id ) return;
+    
     const messagePayload = {
-      chatId: chat._id,
+      chatId: chat?.existingChat._id,
       text: text.trim(),
     };
-
     socket.emit("msg", messagePayload);
     setText("");
   };
 
   useEffect(() => {
-    if (!chat?._id) return;
-    socket.emit("join-room", chat._id);
+    if (!chat?.existingChat._id) return;
+    socket.emit("join-room", chat?.existingChat._id);
 
     const handleConnect = () => {
       setIsConnected(true);
@@ -56,7 +62,7 @@ function MessagePage() {
     };
 
     const handleIncomingMessage = (newMessage: Message) => {
-      if (newMessage.chatId === chat._id) {
+      if (newMessage.chatId === chat?.existingChat._id) {
         setChatMessages((prev) => [...prev, newMessage]);
       }
     };
@@ -70,7 +76,7 @@ function MessagePage() {
       socket.off("disconnect", handleDisconnect);
       socket.off("recieve-msg", handleIncomingMessage);
     };
-  }, [chat?._id, socket.connected]);
+  }, [chat?.existingChat._id, socket.connected]);
 
 
   return (
@@ -79,12 +85,12 @@ function MessagePage() {
       <div className="flex flex-row w-full justify-between bg-gray-500 p-3">
         <div className="flex gap-5 items-center">
           <img
-            src="profile.png"
+            src={defaultPic}
             className="rounded-full w-8 h-8"
             alt="profile"
           />
           <div className="flex flex-col">
-            <p className="font-mono"> Rakesh pegu</p>
+            <p className="font-mono"> {chat?.username}</p>
             <p>{isConnected ? "Online" : "Offline"}</p>
           </div>
         </div>
@@ -92,7 +98,7 @@ function MessagePage() {
       <div className="h-[85vh] overflow-y-scroll bg-gray-100 w-full p-3">
         {chatMessages.length === 0 ? (
           <p className="text-center text-gray-400 mt-4">
-            No messages yet. Say hi 👋
+            No messages yet. start chatting
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -121,7 +127,7 @@ function MessagePage() {
           className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-40"
           type="submit"
         >
-          Send
+          <Send/>
         </button>
       </form>
     </div>

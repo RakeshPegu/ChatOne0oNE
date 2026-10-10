@@ -16,7 +16,6 @@ export function Layout(){
 }
 export function IsAuthenticated(){
     const isAuthenticated = useAuthStore((s)=>s.isAuthenticated)
-    console.log(isAuthenticated)
     if(isAuthenticated === false){
         return <Navigate to={'/login'}/>
     }
