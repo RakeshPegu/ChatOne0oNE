@@ -1,4 +1,5 @@
-import { chatModel, messageModel } from "../lib/db.js"
+import mongoose from "mongoose"
+import { chatModel, messageModel, userModel } from "../lib/db.js"
 import AppError from "../utility/error.js"
 
 export const sendMessage = async(req, res)=>{
@@ -29,7 +30,8 @@ export const sendMessage = async(req, res)=>{
 }
 export const getMessages = async(req, res)=>{
     const tokenUserId = req.userId
-    const chatId = req.params.chatId
+    const {chatId} = req.params
+    console.log('this our cursor', req.query.cursor)
     if(!tokenUserId){
         throw new AppError(403, 'Not authenticated')
     }
@@ -40,9 +42,39 @@ export const getMessages = async(req, res)=>{
     if(!existingChat){
         throw new AppError(404, 'Chat not found')
     }
-    const messages = await messageModel.find({chatId:chatId}) 
-    console.log('this are the messages', messages)    
-    res.status(200).json({success:true, messages})
+    const limit = Math.min(Math.max(Number(req.query.limit) || 30, 1), 100);
+
+    const filter = { chatId };
+
+    if (req.query.cursor) {
+        const [createdAtStr, lastId] = String(req.query.cursor).split("_");
+        const createdAt = new Date(createdAtStr);
+        if (isNaN(createdAt.getTime()) || !mongoose.isValidObjectId(lastId)) {
+            throw new AppError(400, "Invalid cursor");
+        }
+        filter.$or = [
+            { createdAt: { $lt: createdAt } },
+            { createdAt, _id: { $lt: lastId } },
+        ];
+    }
+
+    const messages = await messageModel
+        .find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit + 1)
+        .lean();
+
+    const hasMore = messages.length > limit;
+    if (hasMore) messages.pop();   
+
+    messages.reverse();            
+
+
+    const oldest = messages[0];
+    const nextCursor =
+        hasMore && oldest ? `${oldest.createdAt.toISOString()}_${oldest._id}` : null;
+    console.log('this is the messages', messages)
+    res.status(200).json({ success: true, messages, hasMore, nextCursor });
 
 }
 export const readMessage = async(req, res)=>{

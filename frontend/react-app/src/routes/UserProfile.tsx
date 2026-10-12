@@ -34,7 +34,7 @@ function UserProfile() {
 
     try {
       const res = await apiRequest.post(`/chats/${user?._id}`);
-      navigate(`/message/${userId}/chat`);
+      navigate(`/chat/${userId}/message`);
     } catch (error) {
         if (axios.isAxiosError(error)) {    
     

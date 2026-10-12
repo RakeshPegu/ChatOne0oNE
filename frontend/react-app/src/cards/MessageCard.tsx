@@ -16,7 +16,7 @@ function MessageCard({
   messages
 }: MessageCardProps) {
   const {user} = useAuthStore()
-  const isOwnMessage = user?._id !== messages.senderId ? true : false 
+  const isOwnMessage = user?._id !== messages.senderId ? false : true
 
   return (
     <div

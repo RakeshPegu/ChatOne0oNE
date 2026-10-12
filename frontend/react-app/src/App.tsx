@@ -10,6 +10,7 @@ import UserList from './routes/UserList'
 import { messageLoader } from './data/messageLoader'
 import { ChatLoader } from './data/chatLoader'
 import { userLoader } from './data/userLoader'
+import RouteError from './components/ErrorElement'
 function App(){
   const router = createBrowserRouter([
     {
@@ -29,6 +30,7 @@ function App(){
     {
       path:'/',
       element:<IsAuthenticated/>,
+      errorElement:<RouteError/>,
       children:[
         {
           path:"/chats/:userId",
@@ -45,7 +47,7 @@ function App(){
         element:<UserProfile/>
       }, 
       {
-        path:"message/:userId/chat",
+        path:"chat/:userId/message",
         loader:messageLoader,
         element:<MessagePage/>
       },

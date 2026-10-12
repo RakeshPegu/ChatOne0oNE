@@ -20,15 +20,10 @@ export const messageLoader = async({params}:LoaderFunctionArgs)=>{
             return
         }
         const chat = existingChat.data.receiverData as Chat
-        const res = await apiRequest.get(`/messages/get_all_messages/${chat.existingChat._id}`)
-    
-        const messages = Array.isArray(res.data)   
-        ? res.data
-        : res.data.messages ?? []                      
-        return {chat:chat, messages:messages}
+        return {chat:chat}
         
     } catch (error) {
-        console.log(error)
+        console.log('this is message error', error)
         throw new Response("Failed to load messages", { status: 500 });
 
                 

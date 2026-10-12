@@ -40,7 +40,7 @@ function ChatCard({
 
   const {user} = useAuthStore();
   const onClick = async()=>{
-    navigate(`/message/${receiverInfo?._id}/chat`)
+    navigate(`/chat/${receiverInfo?._id}/message`)
   }
 
   useEffect(() => {
